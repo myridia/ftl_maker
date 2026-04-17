@@ -16,23 +16,37 @@ typedef struct {
   char value[MAX_MESSAGE_VALUE_LENGTH];
 } FTLMessage;
 
-char *url_encode_simple(const char *str) {
+// Helper function: Check if a character is an ASCII alphanumeric or safe
+// character
+int is_safe_utf8(unsigned char c) {
+  return isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~';
+}
+
+char *url_encode_utf8(const char *str) {
   size_t len = strlen(str);
-  char *encoded = malloc(3 * len + 1); // Max possible size
+  char *encoded =
+      malloc(3 * len + 1); // Max possible size (each byte could become %XX)
   if (!encoded)
     return NULL;
 
   char *p = encoded;
   for (size_t i = 0; i < len; i++) {
-    unsigned char c = str[i];
-    if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+    unsigned char c = str[i]; // Treat each byte as unsigned
+
+    if (is_safe_utf8(c)) {
+      // If it's a safe ASCII character, just copy it
       *p++ = c;
+    } else if ((c & 0x80) == 0) {
+      // If it's an ASCII character (0-127) that's not safe, encode it
+      sprintf(p, "%%%02X", c);
+      p += 3;
     } else {
+      // Handle UTF-8 multi-byte characters:  Encode each byte individually
       sprintf(p, "%%%02X", c);
       p += 3;
     }
   }
-  *p = 0;
+  *p = 0; // Null terminate the encoded string
   return encoded;
 }
 
@@ -202,11 +216,12 @@ char *translate(const char *source, const char *target, const char *value) {
 
   chunk.memory = malloc(1);
   chunk.size = 0;
-  char *encoded = url_encode_simple(value);
+
+  char *encoded = url_encode_utf8(value);
   snprintf(url, sizeof(url), "https://mtranslate.myridia.com?s=%s&t=%s&v=%s",
            source, target, encoded);
 
-  fprintf(stderr, "%s\n", url);
+  // fprintf(stderr, "%s\n", url);
 
   curl = curl_easy_init();
 
@@ -286,7 +301,7 @@ int main(int argc, char *argv[]) {
   if (parse_ftl_file("base.ftl", messages, &num_messages) == 0) {
     printf("Parsed %d messages:\n", num_messages);
     for (int i = 0; i < num_messages; i++) {
-      printf("ID: %s, Value: %s\n", messages[i].id, messages[i].value);
+      // printf("ID: %s, Value: %s\n", messages[i].id, messages[i].value);
 
       char *translation = translate("en", "de", messages[i].value);
 
