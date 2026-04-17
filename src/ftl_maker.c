@@ -6,7 +6,6 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
 #define MAX_LINE_LENGTH 256
 #define MAX_MESSAGE_ID_LENGTH 64
 #define MAX_MESSAGE_VALUE_LENGTH 256
@@ -173,6 +172,84 @@ void *fill_ftl(char ftl[104][6]) {
   free(chunk.memory);
 }
 
+// Function to translate a single string
+char *translate(const char *source, const char *target, const char *value) {
+  CURL *curl;
+  CURLcode res;
+  struct MemoryStruct chunk;
+  char url[256]; // Adjust size as needed
+  char *translation = NULL;
+
+  chunk.memory = malloc(1);
+  chunk.size = 0;
+  snprintf(url, sizeof(url), "https://mtranslate.myridia.com?s=%s&t=%s&v=%s",
+           source, target, value);
+
+  fprintf(stderr, "%s\n", url);
+
+  curl = curl_easy_init();
+
+  if (curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK) {
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+      goto cleanup;
+    } else {
+
+      json_error_t error;
+      json_t *root = json_loads(chunk.memory, 0, &error);
+
+      if (!root) {
+        fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
+        goto cleanup;
+      } else {
+
+        json_t *translated_text = json_object_get(root, "target_value");
+
+        if (translated_text) {
+          if (json_is_string(translated_text)) {
+            const char *translation_str = json_string_value(translated_text);
+            translation = strdup(translation_str);
+            if (translation == NULL) {
+              fprintf(stderr,
+                      "Error: Could not allocate memory for translation.\n");
+              goto cleanup_json;
+            }
+          } else {
+            fprintf(stderr, "Error: 'translated_text' is not a string.\n");
+            goto cleanup_json;
+          }
+        } else {
+          fprintf(stderr, "Error: 'translated_text' field not found.\n");
+          goto cleanup_json;
+        }
+
+      cleanup_json:
+        json_decref(root);
+      }
+    }
+
+  cleanup:
+    // Clean up curl
+    curl_easy_cleanup(curl);
+  } else {
+    fprintf(stderr, "curl_easy_init() failed\n");
+    translation = NULL;
+  }
+
+  free(chunk.memory);
+
+  return translation;
+}
+
 int main(int argc, char *argv[]) {
   printf("Arguments: %d \n", argc);
   char ftl[104][6];
@@ -182,14 +259,34 @@ int main(int argc, char *argv[]) {
     printf("ftl[%d]: %s\n", i, ftl[i]);
   }
 
-  FTLMessage messages[104]; // Array to store the messages
+  FTLMessage messages[104];
   int num_messages = 0;
 
   if (parse_ftl_file("base.ftl", messages, &num_messages) == 0) {
     printf("Parsed %d messages:\n", num_messages);
     for (int i = 0; i < num_messages; i++) {
       printf("ID: %s, Value: %s\n", messages[i].id, messages[i].value);
+
+      char *translation = translate("en", "de", messages[i].value);
+
+      if (translation != NULL) {
+        // printf("Original: %s\n", messages[i].value);
+        printf("Translation: %s\n", translation);
+        free(translation);
+      } else {
+        fprintf(stderr, "Translation failed for: %s\n", messages[i].value);
+      }
     }
+  }
+
+  char *translation = translate("en", "de", "hello");
+
+  if (translation != NULL) {
+    printf("Original: %s\n", "hello");
+    printf("Translation: %s\n", translation);
+    free(translation); // Free the allocated memory
+  } else {
+    fprintf(stderr, "Translation failed for: %s\n", "hello");
   }
 
   return 0;

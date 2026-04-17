@@ -1,13 +1,13 @@
 password = Password
 open = Open
-save 
-copy
-paste
-cut
-search
-close
-enter_text
-status
-show_password
-hide_password
-about
+save = Save
+copy = Copy
+paste = Paste
+cut = Cut
+search = Search
+close = Close
+enter_text = Enter text
+status = Status 
+show_passwod = Show password
+hide_password = Hide password
+about = About
