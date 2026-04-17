@@ -108,6 +108,5 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 10; i++) {
     printf("ftl[%d]: %s\n", i, ftl[i]);
   }
-  free(ftl);
   return 0;
 }
