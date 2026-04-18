@@ -300,38 +300,69 @@ bool starts_with(const char *str, const char *prefix) {
   }
 }
 
+char *get_substring(const char *str, int start, int length) {
+  if (str == NULL) {
+    return NULL;
+  }
+
+  size_t str_len = strlen(str);
+
+  if (start < 0 || start >= str_len || length <= 0) {
+    return NULL; // Or handle invalid input differently (e.g., return an empty
+                 // string)
+  }
+
+  // Adjust length if it exceeds the remaining string length
+  if (start + length > str_len) {
+    length = str_len - start;
+  }
+
+  char *substring = (char *)malloc((length + 1) * sizeof(char));
+  if (substring == NULL) {
+    return NULL; // Memory allocation failed
+  }
+
+  strncpy(substring, str + start, length);
+  substring[length] = '\0'; // Null-terminate
+
+  return substring;
+}
+
 int main(int argc, char *argv[]) {
   printf("Arguments: %d \n", argc);
   char ftl[104][6];
   fill_ftl(ftl);
 
-  for (int i = 0; i < 104; i++) {
-    printf("ftl[%d]: %s\n", i, ftl[i]);
-  }
+  for (int x = 0; x < 104; x++) {
+    char *code = get_substring(ftl[x], 0, 2); // First 2 characters
+    bool h = strncmp(code, "en", 2);
+    if (h == 0) {
+      continue;
+    }
+    printf("ftl[%d]: %s\n", x, code);
+    FTLMessage messages[104];
+    int num_messages = 0;
 
-  FTLMessage messages[104];
-  int num_messages = 0;
+    if (parse_ftl_file("base.ftl", messages, &num_messages) == 0) {
+      printf("Parsed %d messages:\n", num_messages);
+      for (int i = 0; i < num_messages; i++) {
 
-  if (parse_ftl_file("base.ftl", messages, &num_messages) == 0) {
-    printf("Parsed %d messages:\n", num_messages);
-    for (int i = 0; i < num_messages; i++) {
-      // char *translation = messages[i].value;
-      if (!starts_with(messages[i].id, "!")) {
-        // printf("ID: %s, Value: %s\n", messages[i].id, messages[i].value);
-        // char *translation2 = translate("en", "de", messages[i].value);
-        // strcpy(translation, translate("en", "de", messages[i].value));
-      }
-      char *translation = translate("en", "de", messages[i].value);
-      printf("Translation: %s\n", translation);
+        char *translation = NULL;
+        if (!starts_with(messages[i].id, "!")) {
+          // printf("ID: %s, Value: %s\n", messages[i].id, messages[i].value);
+          translation = translate("en", code, messages[i].value);
+          printf("Translation: %s\n", translation); //
+        }
 
-      if (translation != NULL) {
-        free(translation);
-      } else {
-        fprintf(stderr, "Translation failed for: %s\n", messages[i].value);
+        // translation = translate("en", "de", messages[i].value);
+
+        if (translation != NULL) {
+          free(translation);
+        }
       }
     }
+    // break;
   }
-
   /*
   char *translation = translate("en", "de", "hello");
 
