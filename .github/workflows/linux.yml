@@ -20,7 +20,7 @@ jobs:
       - name: Dependencies
         run: |
          sudo apt-get update -y
-         sudo apt-get install build-essential git cmake curl -y
+         sudo apt-get install build-essential git cmake curl libcurl4-openssl-dev -y
 
       - name: Checkout
         uses: actions/checkout@v4
