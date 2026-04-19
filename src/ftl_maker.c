@@ -471,6 +471,35 @@ int create_directory(const char *directory_name) {
   }
 }
 
+char *concat_strings(const char *str1, const char *str2) {
+  if (str1 == NULL && str2 == NULL) {
+    return NULL; // Or return an empty string, depending on desired behavior
+  }
+
+  if (str1 == NULL) {
+    return strdup(str2); // Duplicate str2
+  }
+
+  if (str2 == NULL) {
+    return strdup(str1); // Duplicate str1
+  }
+
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
+  size_t total_len = len1 + len2 + 1; // +1 for the null terminator
+
+  char *result = (char *)malloc(total_len * sizeof(char));
+  if (result == NULL) {
+    perror("malloc failed");
+    return NULL; // Indicate memory allocation failure
+  }
+
+  strcpy(result, str1); // Copy the first string
+  strcat(result, str2); // Append the second string
+
+  return result;
+}
+
 int main(int argc, char *argv[]) {
   char *basefile = NULL;
 
@@ -500,26 +529,21 @@ int main(int argc, char *argv[]) {
   // fill the ftl possible translations
   char ftl[104][6];
   fill_ftl(ftl);
+  char folder_path[] = "i18n/";
+  int result = create_directory(folder_path);
 
   for (int x = 0; x < 104; x++) {
-
+    // const char *folder = ftl[x];
     char *code = get_substring(ftl[x], 0, 2);
-    printf("size: %d code: %s folder: %s  \n", strlen(ftl[x]), code, ftl[x]);
-    if (strlen(ftl[x]) == 5 && x < 5) {
 
-      char file_path[] = "i18n/";
-      int result = create_directory(file_path);
+    if (strlen(ftl[x]) == 5) {
+      printf("size: %d code: %s folder: %s  \n", strlen(ftl[x]), code, ftl[x]);
 
-      bool same_code = strncmp(code, "en", 2);
+      char *folder_path2 = concat_strings(folder_path, ftl[x]);
+      int result2 = create_directory(folder_path2);
+      char *file_path = concat_strings(folder_path2, "/app.ftl");
 
-      sprintf(file_path + strlen(file_path), "%s/", ftl[x]);
-      int result2 = create_directory(file_path);
-
-      sprintf(file_path + strlen(file_path), "%s.ftl", "app");
-      // printf("code: %s \n", code);
-      // printf("file_path: %s \n", file_path);
       FILE *fp = fopen(file_path, "w");
-
       FTLMessage messages[104];
       int num_messages = 0;
 
@@ -528,9 +552,10 @@ int main(int argc, char *argv[]) {
           char *translation = NULL;
           // if (same_code == 1) {
           if (!starts_with(messages[i].id, "!")) {
-            // printf("code: %s ID: %s, Value: %s\n", code, messages[i].id,
-            //        messages[i].value);
-            translation = translate("en", code, messages[i].value);
+            // printf("code: %s ID: %s, Value: %s\n", code,
+            messages[i].id,
+                //        messages[i].value);
+                translation = translate("en", code, messages[i].value);
             fprintf(fp, "%s = %s \n", messages[i].id, translation);
           } else {
             fprintf(fp, "%s = %s \n", messages[i].id, messages[i].value);
@@ -541,6 +566,7 @@ int main(int argc, char *argv[]) {
           //}
         }
       }
+
       fclose(fp);
     }
   }
