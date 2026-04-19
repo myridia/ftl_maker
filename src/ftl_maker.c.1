@@ -457,15 +457,15 @@ int file_exists(const char *filename) {
 // Function to create a directory if it doesn't already exist
 int create_directory(const char *directory_name) {
   if (mkdir(directory_name, 0777) == 0) {
-    // printf("Directory created successfully: %s\n", directory_name);
+    printf("Directory created successfully: %s\n", directory_name);
     return 0; // Success
   } else {
     // Check if the directory already exists
     if (errno == EEXIST) {
-      // printf("Directory already exists: %s\n", directory_name);
+      printf("Directory already exists: %s\n", directory_name);
       return 0; // Success (directory already exists)
     } else {
-      // perror("Error creating directory");
+      perror("Error creating directory");
       return 1; // Indicate an error
     }
   }
@@ -493,61 +493,52 @@ int main(int argc, char *argv[]) {
   }
   printf("basefile: %s \n", basefile);
   // return 0;
-
-  // const char *directory_name2 = "i18n/xx";
-  // int result2 = create_directory(directory_name2);
+  const char *directory_name = "i18n";
+  int result = create_directory(directory_name);
 
   // fill the ftl possible translations
   char ftl[104][6];
   fill_ftl(ftl);
 
   for (int x = 0; x < 104; x++) {
-
-    if (x > 3) {
-      // break;
+    if (x == 2) {
+      break;
     }
+    char *code = get_substring(ftl[x], 0, 2);
+    bool same_code = strncmp(code, "en", 2);
 
-    if (strlen(ftl[x]) == 5) {
+    // char fpath[11] = "i18n/";
 
-      char *code = get_substring(ftl[x], 0, 2);
-      printf("size: %d code: %s folder: %s  \n", strlen(ftl[x]), code, ftl[x]);
+    char directory_name[] = "i18n/xx";
+    sprintf(directory_name + strlen(directory_name), "%s/", ftl[x]);
+    int result = create_directory(directory_name);
+    // int result2 = create_directory(directory_name2);
+    return 0;
+    // sprintf(fpath + strlen(fpath), "%s/app.ftl", ftl[x]);
+    // FILE *fp = fopen(fpath, "w");
 
-      char file_path[] = "i18n/";
-      int result = create_directory(file_path);
+    FTLMessage messages[104];
+    int num_messages = 0;
 
-      bool same_code = strncmp(code, "en", 2);
-
-      sprintf(file_path + strlen(file_path), "%s/", ftl[x]);
-      int result2 = create_directory(file_path);
-
-      sprintf(file_path + strlen(file_path), "%s.ftl", "app");
-      // printf("code: %s \n", code);
-      // printf("file_path: %s \n", file_path);
-      FILE *fp = fopen(file_path, "w");
-
-      FTLMessage messages[104];
-      int num_messages = 0;
-
-      if (parse_ftl_file(basefile, messages, &num_messages) == 0) {
-        for (int i = 0; i < num_messages; i++) {
-          char *translation = NULL;
-          // if (same_code == 1) {
-          if (!starts_with(messages[i].id, "!")) {
-            // printf("code: %s ID: %s, Value: %s\n", code, messages[i].id,
-            //        messages[i].value);
-            translation = translate("en", code, messages[i].value);
-            fprintf(fp, "%s = %s \n", messages[i].id, translation);
-          } else {
-            fprintf(fp, "%s = %s \n", messages[i].id, messages[i].value);
-          }
-          if (translation != NULL) {
-            free(translation);
-          }
-          //}
+    if (parse_ftl_file(basefile, messages, &num_messages) == 0) {
+      for (int i = 0; i < num_messages; i++) {
+        char *translation = NULL;
+        // if (same_code == 1) {
+        if (!starts_with(messages[i].id, "!")) {
+          printf("code: %s ID: %s, Value: %s\n", code, messages[i].id,
+                 messages[i].value);
+          translation = translate("en", code, messages[i].value);
+          fprintf(fp, "%s = %s \n", messages[i].id, translation);
+        } else {
+          fprintf(fp, "%s = %s \n", messages[i].id, messages[i].value);
         }
+        if (translation != NULL) {
+          free(translation);
+        }
+        //}
       }
-      fclose(fp);
     }
+    fclose(fp);
   }
 
   return 0;
