@@ -14,6 +14,9 @@
 
 #ifdef _WIN32
 #include <direct.h>
+#include <io.h>
+#define access _access
+#define F_OK 0
 #define mkdir(path, mode) _mkdir(path)
 #else
 #include <unistd.h>
@@ -422,32 +425,78 @@ char *find_first_file_with_extension(const char *directory,
   return NULL; // No file found
 }
 
+int file_exists(const char *filename) {
+  // Check if the filename is NULL
+  if (filename == NULL) {
+    fprintf(stderr, "Error: Filename is NULL\n");
+    return 0; // Indicate that the file does not exist
+  }
+
+#ifdef _WIN32
+  // Windows implementation using _access
+  if (access(filename, F_OK) == 0) {
+    // File exists
+    return 1;
+  } else {
+    // File does not exist or there was an error
+    return 0;
+  }
+#else
+  // POSIX (Linux, macOS, etc.) implementation using stat
+  struct stat buffer;
+  if (stat(filename, &buffer) == 0) {
+    // File exists
+    return 1;
+  } else {
+    // File does not exist or there was an error
+    return 0;
+  }
+#endif
+}
+
+// Function to create a directory if it doesn't already exist
+int create_directory(const char *directory_name) {
+  if (mkdir(directory_name, 0777) == 0) {
+    printf("Directory created successfully: %s\n", directory_name);
+    return 0; // Success
+  } else {
+    // Check if the directory already exists
+    if (errno == EEXIST) {
+      printf("Directory already exists: %s\n", directory_name);
+      return 0; // Success (directory already exists)
+    } else {
+      perror("Error creating directory");
+      return 1; // Indicate an error
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
-  // char *filename = NULL;
-  // filename = find_first_file_with_extension(".", ".ftl");
+  char *basefile = NULL;
+
   // printf("filename: %s \n", filename);
-  printf("Arguments: %d \n", argc);
+  // printf("Arguments: %d \n", argc);
   // char *base = "-b";
   for (int i = 0; i < argc; i++) {
     if (strncmp(argv[i], "-b", 2) == 0) {
       // printf("  %b\n", strncmp(argv[i], base, 2));
-      printf("  argv[%d] = %s\n", i, argv[i + 1]);
+      if (argv[i + 1]) {
+        if (file_exists(argv[i + 1])) {
+          basefile = argv[i + 1];
+          // printf("  argv[%d] = %s\n", i, argv[i + 1]);
+        }
+      }
     }
   }
-
-  return 0;
+  if (basefile == NULL) {
+    basefile = find_first_file_with_extension(".", ".ftl");
+  }
+  printf("basefile: %s \n", basefile);
+  // return 0;
   const char *directory_name = "i18n";
-
-  if (mkdir(directory_name, 0777) == 0) {
-    printf("Directory created successfully: %s\n", directory_name);
-  } else {
-    if (errno == EEXIST) {
-      printf("Directory already exists: %s\n", directory_name);
-    } else {
-      perror("Error creating directory");
-      return 1;
-    }
-  }
+  int result = create_directory(directory_name);
+  const char *directory_name2 = "i18n/xx";
+  int result2 = create_directory(directory_name2);
 
   // fill the ftl possible translations
   char ftl[104][6];
@@ -461,14 +510,13 @@ int main(int argc, char *argv[]) {
     bool same_code = strncmp(code, "en", 2);
 
     char fpath[11] = "i18n/";
-    char s2[] = "test";
     sprintf(fpath + strlen(fpath), "%s.ftl", ftl[x]);
     FILE *fp = fopen(fpath, "w");
 
     FTLMessage messages[104];
     int num_messages = 0;
 
-    if (parse_ftl_file("en-US.ftl", messages, &num_messages) == 0) {
+    if (parse_ftl_file(basefile, messages, &num_messages) == 0) {
       for (int i = 0; i < num_messages; i++) {
         char *translation = NULL;
         // if (same_code == 1) {
