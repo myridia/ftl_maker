@@ -33,7 +33,7 @@ jobs:
 
       - name: Check
         run: |
-          tree C:\
+          
 
         #  vcpkg install curl
         # echo "CURL_INCLUDE_DIR is: $env:CURL_INCLUDE_DIR"
@@ -48,6 +48,7 @@ jobs:
 
       - name: Build
         run: |
+           $vcpkg_toolchain = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\VisualStudio\Setup\v1\Configuration' -Name InstallationPath | Select-Object -ExpandProperty InstallationPath
            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
            cmake --build build       
            mv build/ftl_maker ftl_maker_mac 
