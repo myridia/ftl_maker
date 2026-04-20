@@ -17,7 +17,7 @@ jobs:
     if: github.repository_owner == 'myridiax'
     runs-on: macos-15
     steps:
-       - name: install nappgui 
+       - name: Dependencies
          run: |
           git clone --depth 1 https://github.com/frang75/nappgui_src.git
           cd nappgui_src
@@ -26,10 +26,10 @@ jobs:
           cmake --build build --config Release -j 4
           sudo cmake --install build --config Release --prefix /usr/local/nappgui
           
-       - name: Checkout repository
+       - name: Checkout
          uses: actions/checkout@v4
 
-       - name: build hello_c_gui
+       - name: Build
          run: |
            cmake -G Xcode -S . -B build -DCMAKE_INSTALL_PREFIX=/usr/local/nappgui -DCMAKE_POLICY_VERSION_MINIMUM=3.5 
            cmake --build build --config Release
@@ -39,7 +39,7 @@ jobs:
            hdiutil create -volname "hello_c_nappgui" -srcfolder "hello_c_nappgui.app" -ov -format UDZO "hello_c_nappgui.dmg"
            #tar -czf hello_c_nappgui.app.tar.gz build/Release/bin/ ./hello_c_nappgui.app
 
-       - name: Upload Macos Intel Binary to release
+       - name: Release
          uses: svenstaro/upload-release-action@v2
          with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
