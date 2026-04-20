@@ -21,10 +21,12 @@ jobs:
     steps:
       - name: Dependencies
         run: |
-          choco install curl -y
+          choco install curl tree -y
       - name: Check
         run: |
-          $env:CURL_DIR      
+          $env:CURL_DIR
+          dir C:\ProgramData\chocolatey\lib\curl
+          
       - name: Checkout
         uses: actions/checkout@v4
 
