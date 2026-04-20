@@ -22,6 +22,7 @@ jobs:
       - name: Dependencies
         run: |
           choco install curl -y
+          choco upgrade cmake
           
       - name: Checkout
         uses: actions/checkout@v4
