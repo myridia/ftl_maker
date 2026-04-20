@@ -11,7 +11,7 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef _WIN64
+#ifdef _WIN32
 #include <direct.h>
 #include <io.h>
 #include <sys/types.h>
