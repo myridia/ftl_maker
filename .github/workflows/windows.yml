@@ -21,8 +21,8 @@ jobs:
     steps:
       - name: Dependencies
         run: |
-          choco install jansson
-        
+          choco search jansson
+          
       - name: Checkout
         uses: actions/checkout@v4
 
