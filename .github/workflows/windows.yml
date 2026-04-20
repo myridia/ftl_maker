@@ -29,7 +29,7 @@ jobs:
       - name: Dependencies
         run: |
           choco install pkgconfiglite tree -y
-          vcpkg install curl jansson dirent:x64-windows  
+          vcpkg install curl:x64-windows jansson:x64-windows dirent:x64-windows pthreads:x64-windows
 
       - name: Check
         run: |
