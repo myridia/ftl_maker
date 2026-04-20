@@ -22,8 +22,7 @@ jobs:
       - name: Dependencies
         run: |
           choco install curl -y
-          echo %CURL_DIR%
-          
+          $env:CURL_DIR          
       - name: Checkout
         uses: actions/checkout@v4
 
