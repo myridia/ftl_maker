@@ -13,10 +13,10 @@ permissions:
   issues: read
   packages: none
 
-env:
-  CURL_INCLUDE_DIR: C:\ProgramData\chocolatey\lib\curl\tools\curl-8.19.0_1-win64-mingw\include\curl
-  CURL_LIBRARY: C:\ProgramData\chocolatey\lib\curl\tools\curl-8.19.0_1-win64-mingw\lib\libcurl.a
-  PKG_CONFIG_PATH: C:\ProgramData\chocolatey\lib\pkgconfiglite\tools\pkg-config-lite-0.28-1\bin
+# env:
+  # CURL_INCLUDE_DIR: C:\ProgramData\chocolatey\lib\curl\tools\curl-8.19.0_1-win64-mingw\include\curl
+  # CURL_LIBRARY: C:\ProgramData\chocolatey\lib\curl\tools\curl-8.19.0_1-win64-mingw\lib\libcurl.a
+  # PKG_CONFIG_PATH: C:\ProgramData\chocolatey\lib\pkgconfiglite\tools\pkg-config-lite-0.28-1\bin
 
 jobs:
   Build:
@@ -25,16 +25,19 @@ jobs:
     steps:
       - name: Dependencies
         run: |
-         choco install curl pkgconfiglite tree -y
+          choco install pkgconfiglite tree -y
+          vcpkg install curl
+
       - name: Check
         run: |
-          vcpkg install curl
+          tree C:\dev/vcpkg
+
+        #  vcpkg install curl
         # echo "CURL_INCLUDE_DIR is: $env:CURL_INCLUDE_DIR"
         # echo "CURL_LIBRARY is: $env:CURL_LIBRARY"
         # echo "PKG_CONFIG_PATH is: $env:PKG_CONFIG_PATH"
         # tree C:\ProgramData\chocolatey\lib\pkgconfiglite
         # pkg-config --modversion curl
-        # tree C:\ProgramData\chocolatey\lib\curl
           
           
       - name: Checkout
