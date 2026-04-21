@@ -1,4 +1,4 @@
-# ftl_maker
+# FTL-Maker
 Mtranslate FTL maker. A Fluent Translation List Maker.
 
 
