@@ -5,45 +5,50 @@ on:
     branches: ["main"]
     tags:
       - '*'
-
   workflow_dispatch:
 
 permissions:
   contents: write
-  pull-requests: write 
+  pull-requests: write
   issues: read
   packages: none
 
+
 jobs:
-  # Single deploy job since we're just deploying
-  build_linux_windows:
-    if: github.repository_owner == 'myridiax'
+  Build:
+    if: github.repository_owner == 'myridia'
     runs-on: windows-latest
     steps:
-      - name: download and build nappgui_rs
+      - name: MSBuild
+        uses: microsoft/setup-msbuild@v2
+        
+      - name: Dependencies
         run: |
-          git clone --depth 1 https://github.com/frang75/nappgui_src.git
-          cd nappgui_src
-          cmake -S . -B build -DNAPPGUI_DEMO=NO
-          cmake --build build --config Release -j 4
-          cmake --install build --config Release --prefix C:/nappgui
+          choco install pkgconfiglite tree -y
+          vcpkg install curl:x64-windows jansson:x64-windows dirent:x64-windows pthreads:x64-windows
 
-        
-      - name: checkout
-        uses: actions/checkout@v2
-        
-      - name: build hello_c_nappgui
+      - name: Check
         run: |
-         cmake -S . -B build -DCMAKE_INSTALL_PREFIX=C:/nappgui
-         cmake --build build --config Release 
-         ls build/Release/bin
+          tree C:\vcpkg\packages
+
+          
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET="x64-windows"
+          cmake --build build --config Release
+          dir build\Release
         
 
-      - name: Upload release
+      - name: Release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'build/Release/bin/hello_c_nappgui.exe'
+          file: 'D:\a\ftl_maker\ftl_maker\build\Release\ftl_maker.exe'
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true  
