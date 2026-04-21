@@ -14,12 +14,13 @@ permissions:
 
 jobs:
   build:
-    if: github.repository_owner == 'myridia'
+    if: github.repository_owner == 'myridiax'
     runs-on: ubuntu-latest
     steps:
       - name: Dependencies
         run: |
-         sudo apt-get install build-essential git cmake -y
+         sudo apt-get update -y
+         sudo apt-get install build-essential cmake libcurl4-openssl-dev libjansson-dev -y
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,13 +28,14 @@ jobs:
       - name: Build
         run: |
          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-         cmake --build build          
+         cmake --build build       
+         mv build/ftl_maker ftl_maker  
 
       - name: Release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'build/Release/bin/ftl_maker'
+          file: 'ftl_maker'
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
