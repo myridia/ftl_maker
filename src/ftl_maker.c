@@ -1,5 +1,5 @@
 #include "lib.h"
-#define TRANS 104
+#define TRANS 99
 
 int main(int argc, char *argv[]) {
   char *basefile = NULL;
