@@ -30,7 +30,6 @@ jobs:
       - name: Check
         run: |
           tree C:\vcpkg\packages
-
           
       - name: Checkout
         uses: actions/checkout@v4
